@@ -15,3 +15,4 @@ from .super_adjacency_list import SuperAdjacencyList
 from .super_complete_graph import SuperCompleteGraph
 from .super_minimal_spaning_tree import SuperMinimalSpaningTree
 from .updating import Updating
+from .evaluation import Evaluation

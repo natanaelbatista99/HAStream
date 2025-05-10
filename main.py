@@ -58,12 +58,6 @@ def set_stdout_stderr(result_dataset_path, dataset_name):
 
 def main():
 
-    #query = f"SELECT * FROM 'results/28k2d/flat_solutions/flat_solution_partitions_t70/partitions_objects/partition_mcs_mpts_*.parquet'"
-    #df    = duckdb.query(query).to_df()
-    #print(df)
-    #print(df['particao_mpts'])
-    #sys.exit(1)
-
     # Checking dataset file and experiement_config.json file
     dataset_name, dataset = check_dataset()
     all_configs           = check_parameters(dataset_name)
@@ -73,6 +67,10 @@ def main():
     result_dataset_path = os.path.join("results", hastream_params['dataset']) #results/dataset_name
     checkpoint_path     = os.path.join(result_dataset_path, "checkpoints")    #results/dataset_name/checkpoints
     os.makedirs(checkpoint_path, exist_ok=True)
+
+    evaluation = Evaluation(hastream_params['dataset'], hastream_params['mpts'])
+    evaluation.evaluation_mensure()
+    sys.exit(1)
 
     hastream, start_index, version = load_checkpoint(checkpoint_path)
 
@@ -97,12 +95,12 @@ def main():
         
         count_points += 1
         
-        if count_points > hastream.n_samples_init and count_points % hastream.n_samples_init == 0:
+        if  count_points % hastream.n_samples_init == 0:
             hastream.predict_one()
-            version += 1
-            save_checkpoint(hastream, count_points, version, checkpoint_path)
-        elif count_points == hastream_params['n_samples_init']:
-            save_checkpoint(hastream, hastream_params['n_samples_init'], version, checkpoint_path)
+
+            if (count_points / hastream.n_samples_init) % 2 == 1:
+                save_checkpoint(hastream, count_points, version, checkpoint_path)
+                version += 1
 
         #if count_points == 14000:
         #    break
@@ -110,6 +108,10 @@ def main():
     hastream.save_runtime_final()
 
     print("Time Total: ", time.time() - start)    
+
+    # ASSESSMENT
+    evaluation = Evaluation(hastream_params['dataset'], hastream_params['mpts'])
+    evaluation.evaluation_mensure()
 
 if __name__ == "__main__":
     main()
