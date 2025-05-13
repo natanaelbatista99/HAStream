@@ -1,14 +1,19 @@
 import time
+import copy
+import itertools
+import sys
+import numpy as np
 
+from sklearn.neighbors import KDTree
 from .abstract_graph import AbstractGraph
 from .micro_cluster import Vertex, MicroCluster
 from .neighbour import Neighbour
 
 class MutualReachabilityGraph(AbstractGraph):
-    def __init__(self, G, mcs : MicroCluster, minPts, timestamp):
+    def __init__(self, graph, mcs : MicroCluster, mpts, timestamp):
         super().__init__()
-        self.m_minPts  = minPts
-        self.G         = G
+        self.mpts      = mpts
+        self.G         = graph
         self.timestamp = timestamp
 
         for mc in mcs:
@@ -17,49 +22,42 @@ class MutualReachabilityGraph(AbstractGraph):
             self.G.add_node(v)
         
         start = time.time()
-        self.computeCoreDistance(G, minPts)
+        self.computeCoreDistance()
         end   = time.time()
-        #print(">tempo para computar coreDistanceDB",end - start, end='\n')
+        print(">tempo para computar coreDistanceDB: ", end - start, end='\n')
 
     def getKnngGraph(self):
         return self.knng
        
     def buildGraph(self):
-        for v1 in self.G:            
-            for v2 in self.G:
-                if v1 != v2:
-                    mrd = self.getMutualReachabilityDistance(v1, v2)
-                    self.G.add_edge(v1, v2, weight = mrd)
-        
-        self.buildGraph1()
-        
-    def buildGraph1(self):
-        for i, (u,v,w) in enumerate(self.G.edges(data='weight')):
-            self.addVertex(u)
-            self.addVertex(v)
-            self.addEdge(u,v,w)
-            
-    def computeCoreDistance(self, vertices, minPts):
-        for current in vertices:
-            neighbours      = self.getNeighbourhood(current, vertices)
-            minPtsNeighbour = neighbours[minPts - 1]
-            
-            current.setCoreDistance(minPtsNeighbour)
+        seen = set()
 
-    def getNeighbourhood(self, vertex, vertices):
-        neighbours = []
-        
-        for v in vertices:
-            if v != vertex:
-                neighbour = Neighbour(v, vertex.getDistance(v))
-                neighbours.append(neighbour)
+        for idx1, v1 in enumerate(self.G.nodes):
+            for idx2, v2 in enumerate(self.G.nodes):
+                pair = (idx1, idx2)
+
+                if idx1 >= idx2 or pair in seen:
+                    continue
                 
-        neighbours.sort(key=lambda x: x.getDistance(), reverse=False)
-        
-        return neighbours
+                seen.add(pair)
+                mrd = self.getMutualReachabilityDistance(v1, v2)
+                self.G.add_edge(v1, v2, weight = mrd)
+
+            
+    def computeCoreDistance(self):
+        coords = [[v for k, v in vx.getMicroCluster().getCenter(self.timestamp).items()] for vx in self.G.nodes]
+        kdtree = KDTree(coords)
+
+        # mpts: valor fixo para a distância do m-ésimo vizinho
+        dists, _       = kdtree.query(coords, k = self.mpts + 1)
+        core_distances = dists[:, -1]  # Pega a distância do m-ésimo vizinho
+
+        # Atualiza os objetos Vertex no grafo com a core distance
+        for vertex, core_dist in zip(self.G.nodes, core_distances):
+            vertex.setCoreDistance(core_dist)
 
     def getMutualReachabilityDistance(self, v1, v2):
         return max(v1.getCoreDistance(), max(v2.getCoreDistance(), v1.getDistance(v2)))
     
-    def getMinPts(self):
-        return self.m_minPts
+    def getmpts(self):
+        return self.m_mpts

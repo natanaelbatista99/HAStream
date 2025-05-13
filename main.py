@@ -59,18 +59,15 @@ def set_stdout_stderr(result_dataset_path, dataset_name):
 def main():
 
     # Checking dataset file and experiement_config.json file
-    dataset_name, dataset = check_dataset()
-    all_configs           = check_parameters(dataset_name)
-    hastream_params       = all_configs[dataset_name]
+    dataset_name, dataset   = check_dataset()
+    all_configs             = check_parameters(dataset_name)
+    hastream_params         = all_configs[dataset_name]
+    hastream_params['mpts'] = list(eval(hastream_params['mpts']))
 
     # Verifica checkpoint
     result_dataset_path = os.path.join("results", hastream_params['dataset']) #results/dataset_name
     checkpoint_path     = os.path.join(result_dataset_path, "checkpoints")    #results/dataset_name/checkpoints
     os.makedirs(checkpoint_path, exist_ok=True)
-
-    evaluation = Evaluation(hastream_params['dataset'], hastream_params['mpts'])
-    evaluation.evaluation_mensure()
-    sys.exit(1)
 
     hastream, start_index, version = load_checkpoint(checkpoint_path)
 
@@ -102,16 +99,9 @@ def main():
                 save_checkpoint(hastream, count_points, version, checkpoint_path)
                 version += 1
 
-        #if count_points == 14000:
-        #    break
-
     hastream.save_runtime_final()
 
     print("Time Total: ", time.time() - start)    
-
-    # ASSESSMENT
-    evaluation = Evaluation(hastream_params['dataset'], hastream_params['mpts'])
-    evaluation.evaluation_mensure()
 
 if __name__ == "__main__":
     main()

@@ -66,11 +66,11 @@ class Vertex():
             return -1
         return self.m_coreDist
 
-    def setCoreDist(self, coreDistValue):
+    def setCoreDistance(self, coreDistValue):
         self.m_coreDist = coreDistValue
 
-    def setCoreDistance(self, coreDistObj):
-        self.m_coreDistanceObject = coreDistObj
+    #def setCoreDistance(self, coreDistObj):
+    #    self.m_coreDistanceObject = coreDistObj
 
     def String(self):
         return f"({self.m_mc.getCenter()})"
@@ -142,7 +142,7 @@ class MicroCluster(metaclass=ABCMeta):
         self.N              = 1
         self.linear_sum     = x
         self.squared_sum    = {i: (x_val * x_val) for i, x_val in x.items()}        
-        self.m_staticCenter = [];
+        self.m_staticCenter = []
 
     def getID(self):
         return self.db_id
@@ -174,7 +174,7 @@ class MicroCluster(metaclass=ABCMeta):
         return self.N * self.fading_function(timestamp - self.last_edit_time)
         
     def getCenter(self, timestamp):
-        ff = self.fading_function(timestamp - self.last_edit_time)
+        ff     = self.fading_function(timestamp - self.last_edit_time)
         weight = self.getWeight(timestamp)
         center = {key: (ff * val) / weight for key, val in self.linear_sum.items()}
         

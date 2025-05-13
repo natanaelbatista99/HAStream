@@ -21,7 +21,6 @@ class Dendrogram:
 
         self.m_mstCopy = DendrogramComponent(first, mst, True)
         
-        
         self.m_root = Node(self.m_mstCopy.getVertices())
         
         self.spurious_1 = 0
