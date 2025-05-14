@@ -362,12 +362,11 @@ class HAStream(base.Clusterer, nn.Module):
         
         print("Computing Multiple Hierarchies:")
         start_hierarchies = time.time()
+
         # PARALLELISM
-        # CPU = 32 cores
-        # (32 - 2) / 2 = 15 cores para 2 códigos simultâneos e 2 cores sobrando (segurança rs)
         args = [mptsi for mptsi in self.mpts]
 
-        with Pool(processes = 16) as pool: 
+        with Pool(processes = (cpu_count() - 5)) as pool: 
             results = pool.map(self.compute_hierarchy_mpts, args)
 
         print(">Time Total: ", time.time() - start_time_total)

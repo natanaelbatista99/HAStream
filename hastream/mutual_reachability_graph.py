@@ -25,9 +25,6 @@ class MutualReachabilityGraph(AbstractGraph):
         self.computeCoreDistance()
         end   = time.time()
         print(">tempo para computar coreDistanceDB: ", end - start, end='\n')
-
-    def getKnngGraph(self):
-        return self.knng
        
     def buildGraph(self):
         seen = set()
@@ -43,7 +40,8 @@ class MutualReachabilityGraph(AbstractGraph):
                 mrd = self.getMutualReachabilityDistance(v1, v2)
                 self.G.add_edge(v1, v2, weight = mrd)
 
-            
+        del seen
+         
     def computeCoreDistance(self):
         coords = [[v for k, v in vx.getMicroCluster().getCenter(self.timestamp).items()] for vx in self.G.nodes]
         kdtree = KDTree(coords)
