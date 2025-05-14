@@ -27,20 +27,10 @@ class MutualReachabilityGraph(AbstractGraph):
         print(">tempo para computar coreDistanceDB: ", end - start, end='\n')
        
     def buildGraph(self):
-        seen = set()
+        pairs = itertools.combinations(self.G.nodes, 2)
 
-        for idx1, v1 in enumerate(self.G.nodes):
-            for idx2, v2 in enumerate(self.G.nodes):
-                pair = (idx1, idx2)
-
-                if idx1 >= idx2 or pair in seen:
-                    continue
-                
-                seen.add(pair)
-                mrd = self.getMutualReachabilityDistance(v1, v2)
-                self.G.add_edge(v1, v2, weight = mrd)
-
-        del seen
+        for v1, v2 in pairs:
+            self.G.add_edge(v1, v2, weight = self.getMutualReachabilityDistance(v1, v2))
          
     def computeCoreDistance(self):
         coords = [[v for k, v in vx.getMicroCluster().getCenter(self.timestamp).items()] for vx in self.G.nodes]

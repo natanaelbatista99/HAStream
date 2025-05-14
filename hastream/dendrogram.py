@@ -145,7 +145,6 @@ class Dendrogram:
                 if isinstance(highest, Edge):
                     highest = (highestWeighted[0].getWeight()).getWeight()
                     
-                
                 current.getNode().setScaleValue(highest)  # epsilon
         
                 subComponents = splittingCandidates[current]  # get TMP

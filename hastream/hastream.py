@@ -1,6 +1,7 @@
 import copy
 import hdbscan
 import math
+import sys
 import os
 import typing
 import time
@@ -364,10 +365,13 @@ class HAStream(base.Clusterer, nn.Module):
         start_hierarchies = time.time()
 
         # PARALLELISM
-        args = [mptsi for mptsi in self.mpts]
+        try: 
+            args = [mptsi for mptsi in self.mpts]
 
-        with Pool(processes = (cpu_count() - 5)) as pool: 
-            results = pool.map(self.compute_hierarchy_mpts, args)
+            with Pool(processes = (cpu_count() - 10)) as pool: 
+                results = pool.map(self.compute_hierarchy_mpts, args)
+        except KeyboardInterrupt:
+            print("Interrompido pelo usuário")
 
         print(">Time Total: ", time.time() - start_time_total)
         
@@ -436,8 +440,7 @@ class HAStream(base.Clusterer, nn.Module):
             end_dendrogram   = time.time()
             print("> Time for Dendrogram: ", end_time_mptsi - start_time_mptsi)
 
-            start_selection = time.time()
-            vertices        = mst            
+            start_selection = time.time()           
             selection       = dendrogram.clusterSelection()
             partition       = [-1 for j in range(len_mcs + 10)]
 
@@ -461,17 +464,13 @@ class HAStream(base.Clusterer, nn.Module):
                 cont += 1
         
             end_selection = time.time()
-            #print("> Time for Selection Clusters: ", end_selection - start_selection)
 
-            self.save_partition(partition, vertices.getVertices(), mptsi)
+            self.save_partition(partition, mst.getVertices(), mptsi)
 
-            if self.plot:
-                self.plot_partition(partition, mptsi, df_partition)
-        
             # Partitions HDBSCAN
             start_hdbscan = time.time()
             
-            clusterer = hdbscan.HDBSCAN(min_cluster_size = 10, min_samples = mptsi, match_reference_implementation = True)
+            clusterer = hdbscan.HDBSCAN(min_cluster_size = 10, min_samples = mptsi, match_reference_implementation = True, core_dist_n_jobs = 1)
             clusterer.fit(df_partition.drop("id_mc", axis=1))
             labels    = clusterer.labels_
 
@@ -483,8 +482,9 @@ class HAStream(base.Clusterer, nn.Module):
             end_hdbscan = time.time()
             print(">Time for HDBSCAN: ", end_hdbscan - start_hdbscan)
 
-            # Plot HDBSCAN result
+            # Plot
             if self.plot:
+                self.plot_partition(partition, mptsi, df_partition)
                 self.plot_hdbscan_result(mptsi, labels, df_partition)
 
             # SAVING OBJECTS PARTITIONS
@@ -510,7 +510,7 @@ class HAStream(base.Clusterer, nn.Module):
         self._init_buffer = np.array(self._init_buffer)
         
         # The linkage="single" does a clustering, e. g., the clusters are indentified and form big data bubbles.
-        clustering = AgglomerativeClustering(n_clusters = int(self.n_samples_init*self.percent), linkage='average')
+        clustering = AgglomerativeClustering(n_clusters = int(self.n_samples_init * self.percent), linkage='average')
         clustering.fit(self._init_buffer)
         
         labels          = clustering.labels_
@@ -520,47 +520,55 @@ class HAStream(base.Clusterer, nn.Module):
         min_mc = max_mc = 0
         epsilon         = {}
         pos_point       = 0
+
+        if self.save_partition:
+            mc_to_points = []
         
         for i in range(len_buffer):
             
-            labels_visited[labels[i]] += 1
+            label      = labels[i]
+            object_new = dict(enumerate(self._init_buffer[i]))
+            labels_visited[label] += 1
             
-            if labels_visited[labels[i]] == 1:
+            if labels_visited[label] == 1:
                 mc = MicroCluster(
-                    x = dict(zip([j for j in range(len(self._init_buffer[i]))], self._init_buffer[i])),
+                    x = object_new,
                     timestamp = self.timestamp,
                     decaying_factor = self.decaying_factor,
                 )
 
-                mc.setID(labels[i])
+                mc.setID(label)
                 
-                self.p_micro_clusters.update({labels[i]: mc})
+                self.p_micro_clusters.update({label: mc})
                 
             else:
-                self.p_micro_clusters[labels[i]].insert(dict(zip([j for j in range(len(self._init_buffer[i]))], self._init_buffer[i])), self.timestamp)
+                self.p_micro_clusters[label].insert(object_new, self.timestamp)
 
-                if labels_visited[labels[i]] == self.mu:
+                if labels_visited[label] == self.mu:
                     count_potential += 1
-                if self.p_micro_clusters[labels[i]].getN() >= self.mu:
-                    epsilon[labels[i]] = self.p_micro_clusters[labels[i]].getRadius(self.timestamp)
+                if self.p_micro_clusters[label].getN() >= self.mu:
+                    epsilon[label] = self.p_micro_clusters[label].getRadius(self.timestamp)
                 
-            max_mc = max(max_mc, self.p_micro_clusters[labels[i]].getN())
+            max_mc = max(max_mc, self.p_micro_clusters[label].getN())
 
             if self.save_partitions:
-                self.df_mc_to_points.at[pos_point, '0']     = self._init_buffer[i][0]
-                self.df_mc_to_points.at[pos_point, '1']     = self._init_buffer[i][1]
-                self.df_mc_to_points.at[pos_point, 'id_mc'] = labels[i]
+                mc_to_points.append([self._init_buffer[i][0], self._init_buffer[i][1], label])
                 pos_point += 1
+        
+        if self.save_partitions:
+            self.df_mc_to_points = pd.DataFrame(mc_to_points, columns=['0', '1', 'id_mc'])
         
         # outliers data_bubbles
         if count_potential != len(self.p_micro_clusters):
-            key   = 0
-            key_p = 0
-            key_o = 2
+            replace_map = {}
+            key         = 0
+            key_p       = 0
+            key_o       = 2
             
             while labels_visited[key]:
                 if labels_visited[key] < self.mu:
-                    self.df_mc_to_points['id_mc'] = self.df_mc_to_points['id_mc'].replace(key, (-1) * key_o)
+                    if self.save_partition:
+                        replace_map[key] = (-1) * key_o
                     
                     self.o_micro_clusters[key_o] = self.p_micro_clusters[key]
                     self.p_micro_clusters.pop(key)
@@ -576,13 +584,16 @@ class HAStream(base.Clusterer, nn.Module):
                         else:
                             min_mc = min(min_mc, self.p_micro_clusters[key_p].getN())
                         
-                        #update new key
-                        self.df_mc_to_points['id_mc'] = self.df_mc_to_points['id_mc'].replace(key, key_p)
+                        if self.save_partitions:
+                            #update new key
+                            replace_map[key] = key_p
 
                     key_p += 1
-                
                 key += 1
-                
+
+            if self.save_partitions:
+                self.df_mc_to_points['id_mc'] = self.df_mc_to_points['id_mc'].replace(replace_map)
+
         end = time.time()
         
         # Time

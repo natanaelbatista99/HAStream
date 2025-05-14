@@ -85,10 +85,8 @@ class Evaluation(nn.Module):
         ]
 
         # Executa em paralelo
-        with Pool(cpu_count() - 5) as pool:
+        with Pool(cpu_count() - 10) as pool:
             results = pool.map(self.compute_scores, args_list)
-
-        print(self.timestamp)
 
         # Preenche os resultados
         for i, j, mpt_i, ari, nmi in results:
@@ -115,3 +113,6 @@ class Evaluation(nn.Module):
 
         del df_partitions_mcs
         del df_partitions_hdbscan
+        del df_heatmap_ari
+        del df_heatmap_nmi
+        del df_mensures
