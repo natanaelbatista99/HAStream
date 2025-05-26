@@ -91,15 +91,11 @@ class HAStream(base.Clusterer, nn.Module):
 
         # DataFrame to save the runtimes
         if self.runtime:
-            self.df_runtime_final      = pd.DataFrame(columns=['timestamp', 'micro_clusters', 'summarization', 'multiple_hierarchies'])
+            self.df_runtime_final = pd.DataFrame(columns=['timestamp', 'micro_clusters', 'summarization', 'multiple_hierarchies'])
 
         if self.save_partitions:
             # DataFrame to save summarized objects from Data Bubbles
-            self.df_mc_to_points = pd.DataFrame({
-                "0": pd.Series(dtype="float"),
-                "1": pd.Series(dtype="float"),
-                "id_mc": pd.Series(dtype="Int64")
-            })
+            self.df_mc_to_points = None
 
         # check that the value of beta is within the range (0,1]
         if not (0 < self.beta <= 1):
@@ -148,8 +144,7 @@ class HAStream(base.Clusterer, nn.Module):
         pos = self._n_samples_seen - 1
 
         if self.save_partitions:
-            self.df_mc_to_points.loc[pos, '0']     = point[0]
-            self.df_mc_to_points.loc[pos, '1']     = point[1]
+            self.df_mc_to_points.loc[pos]         = point
             self.df_mc_to_points.loc[pos, 'id_mc'] = 0
 
         if len(self.p_micro_clusters) != 0:
@@ -368,7 +363,9 @@ class HAStream(base.Clusterer, nn.Module):
         try: 
             args = [mptsi for mptsi in self.mpts]
 
-            with Pool(processes = (cpu_count() - 10)) as pool: 
+            print('CPU: ', cpu_count())
+
+            with Pool(processes = (20)) as pool: 
                 results = pool.map(self.compute_hierarchy_mpts, args)
         except KeyboardInterrupt:
             print("Interrompido pelo usuário")
@@ -519,7 +516,6 @@ class HAStream(base.Clusterer, nn.Module):
         count_potential = 0
         min_mc = max_mc = 0
         epsilon         = {}
-        pos_point       = 0
 
         if self.save_partition:
             mc_to_points = []
@@ -540,7 +536,6 @@ class HAStream(base.Clusterer, nn.Module):
                 mc.setID(label)
                 
                 self.p_micro_clusters.update({label: mc})
-                
             else:
                 self.p_micro_clusters[label].insert(object_new, self.timestamp)
 
@@ -552,11 +547,10 @@ class HAStream(base.Clusterer, nn.Module):
             max_mc = max(max_mc, self.p_micro_clusters[label].getN())
 
             if self.save_partitions:
-                mc_to_points.append([self._init_buffer[i][0], self._init_buffer[i][1], label])
-                pos_point += 1
+                mc_to_points.append([x for x in self._init_buffer[i]] + [label])
         
         if self.save_partitions:
-            self.df_mc_to_points = pd.DataFrame(mc_to_points, columns=['0', '1', 'id_mc'])
+            self.df_mc_to_points = pd.DataFrame(mc_to_points, columns=[x for x in range(len(self._init_buffer[i]))] + ['id_mc'])
         
         # outliers data_bubbles
         if count_potential != len(self.p_micro_clusters):
@@ -820,7 +814,7 @@ class HAStream(base.Clusterer, nn.Module):
             for j in range(len(partition)):        
                 plt.gca().add_patch(plt.Circle((partition['x'].loc[j], partition['y'].loc[j]), partition['radio'].loc[j], color=partition['color'].loc[j], fill=False))
 
-            plt.scatter(df_partition['0'], df_partition['1'], c='black', **plot_kwds, label=legend)
+            plt.scatter(df_partition[0], df_partition[1], c='black', **plot_kwds, label=legend)
             plt.legend(bbox_to_anchor=(-0.1, 1.02, 1, 0.2), loc="lower left", borderaxespad=0, fontsize=28)
             plt.savefig(str(self.base_dir_result) + "plots/plot_mcs_t" + str(self.timestamp) + "/mpts_" + str(mpts) + ".png")
             plt.close()
@@ -849,7 +843,7 @@ class HAStream(base.Clusterer, nn.Module):
         title += "Len Points: " + str(len(labels))
         
         plt.title(title)
-        plt.scatter(df_partition['0'], df_partition['1'], c=labels, cmap='magma', **plot_kwds)
+        plt.scatter(df_partition[0], df_partition[1], c=labels, cmap='magma', **plot_kwds)
         plt.savefig(str(self.base_dir_result) + "plots/plot_mcs_t" + str(self.timestamp) + "/mpts_" + str(mpts) + "_hdbscan.png")
         plt.close('all')
 
@@ -925,7 +919,7 @@ class HAStream(base.Clusterer, nn.Module):
         diff_points    = np.zeros(max_id + 1)
         
         for i in range(self._n_samples_seen):
-            id_mc = self.df_mc_to_points.loc[i, 'id_mc']
+            id_mc = int(self.df_mc_to_points.loc[i, 'id_mc'])
             
             if id_mc > -1:
                 if not labels_visited[id_mc] and id_mc in self.p_micro_clusters:
