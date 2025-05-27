@@ -365,7 +365,7 @@ class HAStream(base.Clusterer, nn.Module):
 
             print('CPU: ', cpu_count())
 
-            with Pool(processes = (20)) as pool: 
+            with Pool(processes = (5)) as pool: 
                 results = pool.map(self.compute_hierarchy_mpts, args)
         except KeyboardInterrupt:
             print("Interrompido pelo usuário")
@@ -752,9 +752,9 @@ class HAStream(base.Clusterer, nn.Module):
                 os.makedirs(sub_dir)
 
             # SAVE MPTS PARTITION
-            df_partition                  = pd.DataFrame([partition])
+            df_partition                   = pd.DataFrame([partition])
             df_partition['partition_mpts'] = mpts
-            df_partition.columns          = df_partition.columns.map(str)
+            df_partition.columns           = df_partition.columns.map(str)
             df_partition.to_parquet(os.path.join(sub_dir, f"partitions_mpts_{mpts}.parquet"), index=True)
             
             if self.plot:
