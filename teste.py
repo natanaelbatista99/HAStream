@@ -1,16 +1,17 @@
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 
-tt = 600
+tt      = 600
+dataset = 'poker_hand'
 
-df_dataset = pd.read_csv('datasets/covertype.csv')
+df_dataset = pd.read_csv('datasets/' + str(dataset) + '.csv')
 
 scaler = MinMaxScaler()
 scaler.fit(df_dataset)
 df_dataset = pd.DataFrame(data=scaler.transform(df_dataset))
 
-df_parquet    = pd.read_parquet('results/covertype/datasets/data_t' + str(tt) + '.parquet')
-df_parquet_mc = pd.read_parquet('results/covertype/flat_solutions/flat_solution_partitions_t' + str(tt) + '/partitions_mcs/partitions_mpts_20.parquet')
+df_parquet    = pd.read_parquet('results/' + str(dataset) + '/datasets/data_t' + str(tt) + '.parquet')
+df_parquet_mc = pd.read_parquet('results/' + str(dataset) + '/flat_solutions/flat_solution_partitions_t' + str(tt) + '/partitions_mcs/partitions_mpts_20.parquet')
 
 df_parquet_mc.drop('partition_mpts', axis=1, inplace=True)
 df_parquet_mc.columns    = df_parquet_mc.columns.astype(int)

@@ -365,7 +365,7 @@ class HAStream(base.Clusterer, nn.Module):
 
             print('CPU: ', cpu_count())
 
-            with Pool(processes = (5)) as pool: 
+            with Pool(processes = (3)) as pool: 
                 results = pool.map(self.compute_hierarchy_mpts, args)
         except KeyboardInterrupt:
             print("Interrompido pelo usuário")
