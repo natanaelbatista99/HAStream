@@ -1,8 +1,9 @@
 import pandas as pd
+
 from sklearn.preprocessing import MinMaxScaler
 
 tt      = 600
-dataset = 'poker_hand'
+dataset = 'covid19'
 
 df_dataset = pd.read_csv('datasets/' + str(dataset) + '.csv')
 

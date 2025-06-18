@@ -347,7 +347,7 @@ class HAStream(base.Clusterer, nn.Module):
         print("> count_potential", len(self.p_micro_clusters))
         print("> count_outlier", len(self.o_micro_clusters))
         
-        if len(self.p_micro_clusters) < (max(self.mpts) / self.mu):
+        if len(self.p_micro_clusters) < max(self.mpts):
             print("no building possible since num_potential_mcs < Mpts")
             return
 
@@ -363,16 +363,16 @@ class HAStream(base.Clusterer, nn.Module):
         try: 
             args = [mptsi for mptsi in self.mpts]
 
-            print('CPU: ', cpu_count())
+            #print('CPU: ', cpu_count())
 
-            with Pool(processes = (3)) as pool: 
+            with Pool(processes = (2)) as pool: 
                 results = pool.map(self.compute_hierarchy_mpts, args)
         except KeyboardInterrupt:
             print("Interrompido pelo usuário")
 
         print(">Time Total: ", time.time() - start_time_total)
         
-        if self.save_partition:
+        if self.save_partitions:
             # ASSESSMENT
             evaluation = Evaluation(self.dataset, self.mpts, self.timestamp)
             evaluation.evaluation_mensure()
@@ -517,7 +517,7 @@ class HAStream(base.Clusterer, nn.Module):
         min_mc = max_mc = 0
         epsilon         = {}
 
-        if self.save_partition:
+        if self.save_partitions:
             mc_to_points = []
         
         for i in range(len_buffer):
@@ -561,7 +561,7 @@ class HAStream(base.Clusterer, nn.Module):
             
             while labels_visited[key]:
                 if labels_visited[key] < self.mu:
-                    if self.save_partition:
+                    if self.save_partitions:
                         replace_map[key] = (-1) * key_o
                     
                     self.o_micro_clusters[key_o] = self.p_micro_clusters[key]
@@ -895,7 +895,7 @@ class HAStream(base.Clusterer, nn.Module):
             if not os.path.exists(m_directory):
                 os.makedirs(m_directory)
 
-            with open(os.path.join(m_directory, "runtime_final_t" + str(self.timestamp) + ".csv"), 'w') as writer:
+            with open(os.path.join(m_directory, "runtime_final.csv"), 'w') as writer:
                 writer.write("timestamp,micro_clusters,summarization,multiple_hierarchies\n")
 
                 for _, linha in self.df_runtime_final.iterrows():
