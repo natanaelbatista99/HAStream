@@ -57,7 +57,6 @@ def set_stdout_stderr(result_dataset_path, dataset_name):
     sys.stderr  = open(stderr_path, 'w')
 
 def main():
-
     # Checking dataset file and experiement_config.json file
     dataset_name, dataset   = check_dataset()
     all_configs             = check_parameters(dataset_name)
@@ -92,7 +91,7 @@ def main():
         
         count_points += 1
         
-        if  count_points % hastream.n_samples_init == 0:
+        if count_points % hastream.n_samples_init == 0:
             hastream.predict_one()
 
             if (count_points / hastream.n_samples_init) % 2 == 1:
