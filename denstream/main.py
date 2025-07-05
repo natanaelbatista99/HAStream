@@ -2,6 +2,7 @@ import pandas as pd
 import sys
 import os
 import json
+import time
 
 from denstream import *
 from sklearn.preprocessing import MinMaxScaler
@@ -38,7 +39,7 @@ def check_dataset():
 
 def check_parameters(dataset_name):
     # Read JSON with parameters from multiple datasets
-    config_path = "../experiment_config.json"
+    config_path = "experiment_config.json"
 
     if not os.path.exists(config_path):
         print(f"Configuration file '{config_path}' not found.")
@@ -54,7 +55,7 @@ def check_parameters(dataset_name):
     return all_configs
 
 def remove_keys_parameters(denstream_params):
-    remove_keys = ["dataset", "mpts", "min_cluster_size", "percent", "method_summarization", "runtime", "plot", "save_partitions"]
+    remove_keys = ["min_cluster_size", "percent", "method_summarization", "runtime", "plot", "save_partitions"]
     
     for key in remove_keys:
         denstream_params.pop(key, None)
@@ -65,6 +66,7 @@ def main():
     dataset_name, dataset    = check_dataset()
     all_configs              = check_parameters(dataset_name)
     denstream_params         = all_configs[dataset_name]
+    denstream_params['mpts'] = list(eval(denstream_params['mpts']))
     result_dataset_path      = os.path.join("results", denstream_params['dataset']) #results/dataset_name
     
     if not os.path.exists(result_dataset_path):
@@ -78,11 +80,12 @@ def main():
 
     denstream = DenStream(**denstream_params)
     
-    count_points       = 0
-    objects_predict    = []
+    count_points    = 0
+    objects_predict = []
 
-    dataset_predict            = pd.DataFrame(dataset)
-    dataset_predict['cluster'] = -1
+    dataset_predict = pd.DataFrame(dataset)
+
+    start_denstream = time.time()
 
     for x, _ in stream.iter_array(dataset):
         denstream.learn_one(x)
@@ -91,14 +94,14 @@ def main():
         objects_predict.append(x)
         
         if count_points % denstream.n_samples_init == 0:
-            index_p = ((count_points / denstream.n_samples_init) - 1) * denstream.n_samples_init
-            for o in objects_predict:
-                dataset_predict.loc[index_p, 'cluster'] = denstream.predict_one(o)
-                index_p += 1
-            print(dataset_predict)
+            denstream.predict_one(objects_predict)
             objects_predict = []
 
-    dataset_predict.to_csv(result_dataset_path + "/dataset.csv", index=False)
+    end_denstream = time.time()
+
+    denstream.save_runtime_final()
+
+    print("Time: ", end_denstream - start_denstream)
 
 if __name__ == "__main__":
     main()
