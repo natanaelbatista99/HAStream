@@ -92,9 +92,9 @@ class HAStream(base.Clusterer, nn.Module):
         # DataFrame to save the runtimes
         if self.runtime:
             self.df_runtime_final = pd.DataFrame(columns=['timestamp', 'micro_clusters', 'summarization', 'multiple_hierarchies'])
-
+        
+        # DataFrame to save summarized objects from Data Bubbles
         if self.save_partitions:
-            # DataFrame to save summarized objects from Data Bubbles
             self.df_mc_to_points = None
 
         # check that the value of beta is within the range (0,1]
@@ -104,16 +104,6 @@ class HAStream(base.Clusterer, nn.Module):
     @property
     def centers(self):
         return {k: cluster.calc_center(self.timestamp) for k, cluster in self.clusters.items()}
-
-    @staticmethod
-    def _distance(point_a, point_b):
-        square_sum = 0
-        dim        = len(point_a)
-        
-        for i in range(dim):
-            square_sum += math.pow(point_a[i] - point_b[i], 2)
-        
-        return math.sqrt(square_sum)
     
     def distanceEuclidian(self, x1, x2):
         distance = 0
@@ -140,11 +130,10 @@ class HAStream(base.Clusterer, nn.Module):
     def _merge(self, point):
         # initiate merged status
         merged_status = False
-
-        pos = self._n_samples_seen - 1
+        pos           = self._n_samples_seen - 1
 
         if self.save_partitions:
-            self.df_mc_to_points.loc[pos]         = point
+            self.df_mc_to_points.loc[pos]          = point
             self.df_mc_to_points.loc[pos, 'id_mc'] = 0
 
         if len(self.p_micro_clusters) != 0:
@@ -190,7 +179,6 @@ class HAStream(base.Clusterer, nn.Module):
                         if self.save_partitions:
                             self.df_mc_to_points.loc[pos, 'id_mc'] = new_key
                             self.df_mc_to_points['id_mc']          = self.df_mc_to_points['id_mc'].replace((-1) * closest_omc_key, new_key)
-                            
                     else:
                         self.o_micro_clusters[closest_omc_key] = updated_omc
 
@@ -521,7 +509,6 @@ class HAStream(base.Clusterer, nn.Module):
             mc_to_points = []
         
         for i in range(len_buffer):
-            
             label      = labels[i]
             object_new = dict(enumerate(self._init_buffer[i]))
             labels_visited[label] += 1
@@ -736,7 +723,7 @@ class HAStream(base.Clusterer, nn.Module):
     def predict_one(self, sample_weight=None):        
         # This function handles the case when a clustering request arrives.
         # implementation of the DBSCAN algorithm proposed by Ester et al.
-        
+
         if not self.initialized:
             return 0
         

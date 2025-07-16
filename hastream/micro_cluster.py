@@ -12,7 +12,6 @@ class SuperVertex():
         self.m_vertices  = set(self.m_component.getVertices())
         self.m_visited   = False
 
-
     def getVertices(self):
         return self.m_vertices
 
@@ -131,9 +130,7 @@ class MicroCluster(metaclass=ABCMeta):
     s_idCounter = 0
     
     def __init__(self, x, timestamp, decaying_factor):
-
-        self.x = x
-
+        self.x               = x
         self.db_id           = MicroCluster.s_idCounter        
         self.last_edit_time  = timestamp
         self.creation_time   = timestamp

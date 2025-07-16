@@ -39,7 +39,7 @@ def check_dataset():
 
 def check_parameters(dataset_name):
     # Read JSON with parameters from multiple datasets
-    config_path = "experiment_config.json"
+    config_path = "../experiment_config.json"
 
     if not os.path.exists(config_path):
         print(f"Configuration file '{config_path}' not found.")
@@ -54,10 +54,8 @@ def check_parameters(dataset_name):
     
     return all_configs
 
-def remove_keys_parameters(denstream_params):
-    remove_keys = ["min_cluster_size", "percent", "method_summarization", "runtime", "plot", "save_partitions"]
-    
-    for key in remove_keys:
+def remove_keys_parameters(denstream_params):    
+    for key in ["min_cluster_size", "runtime", "plot", "save_partitions"]:
         denstream_params.pop(key, None)
 
     return denstream_params
@@ -79,11 +77,10 @@ def main():
     remove_keys_parameters(denstream_params)
 
     denstream = DenStream(**denstream_params)
+    print("PARAMS:", denstream_params)
     
     count_points    = 0
     objects_predict = []
-
-    dataset_predict = pd.DataFrame(dataset)
 
     start_denstream = time.time()
 

@@ -95,7 +95,7 @@ def main():
             hastream.predict_one()
 
             if (count_points / hastream.n_samples_init) % 2 == 1:
-                save_checkpoint(hastream, count_points, version, checkpoint_path)
+                #save_checkpoint(hastream, count_points, version, checkpoint_path)
                 version += 1
 
     hastream.save_runtime_final()
