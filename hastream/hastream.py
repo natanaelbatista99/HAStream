@@ -349,8 +349,10 @@ class HAStream(base.Clusterer, nn.Module):
 
         # PARALLELISM
         try: 
-            args = [mptsi for mptsi in self.mpts]
-
+            if len(self.p_micro_clusters) <= max(self.mpts):
+                args = [mptsi for mptsi in range(2, len(self.p_micro_clusters), 2)]
+            else:
+                args = [mptsi for mptsi in self.mpts]
             #print('CPU: ', cpu_count())
 
             with Pool(processes = (2)) as pool: 
@@ -362,7 +364,10 @@ class HAStream(base.Clusterer, nn.Module):
         
         if self.save_partitions:
             # ASSESSMENT
-            evaluation = Evaluation(self.dataset, self.mpts, self.timestamp)
+            if len(self.p_micro_clusters) <= max(self.mpts):
+                evaluation = Evaluation(self.dataset, [mptsi for mptsi in range(2, len(self.p_micro_clusters), 2)], self.timestamp)
+            else:
+                evaluation = Evaluation(self.dataset, self.mpts, self.timestamp)
             evaluation.evaluation_mensure()
 
         if self.runtime:

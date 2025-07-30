@@ -77,7 +77,6 @@ def main():
     remove_keys_parameters(denstream_params)
 
     denstream = DenStream(**denstream_params)
-    print("PARAMS:", denstream_params)
     
     count_points    = 0
     objects_predict = []
