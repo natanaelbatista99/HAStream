@@ -16,6 +16,7 @@ from river import base
 from collections import defaultdict, deque
 from sklearn.cluster import AgglomerativeClustering
 from .micro_cluster import Vertex, MicroCluster
+from sklearn.cluster import MiniBatchKMeans
 from .mutual_reachability_graph import MutualReachabilityGraph
 from .minimal_spaning_tree import MinimalSpaningTree
 from .updating import Updating
@@ -500,7 +501,10 @@ class HAStream(base.Clusterer, nn.Module):
         self._init_buffer = np.array(self._init_buffer)
         
         # The linkage="single" does a clustering, e. g., the clusters are indentified and form big data bubbles.
-        clustering = AgglomerativeClustering(n_clusters = int(self.n_samples_init * self.percent), linkage='average')
+        #clustering = AgglomerativeClustering(n_clusters = int(self.n_samples_init * self.percent), linkage='average')
+        #clustering.fit(self._init_buffer)
+
+        clustering = MiniBatchKMeans(n_clusters=int(self.n_samples_init * self.percent), batch_size=10000, max_iter=5, random_state=42)
         clustering.fit(self._init_buffer)
         
         labels          = clustering.labels_
