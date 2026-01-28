@@ -11,9 +11,8 @@ This implementation uses Cython to improve the performance of many operations th
 ## <a id="installation"></a> 1. Installation
 
 The first step for installing the project consists of downloading the code from the repository publicly available at Github. Note that if this repository has been already downloaded as ZIP file, the clonning of the Github repository is not necessary. 
-```
+.. code:: bash
 git clone git@github.com:omittedforreview/SCore-SG.git
-```
 
 Next, change to the project folder and create a virtual environment that will contain the packages and dependencies needed to run the CORE-SG project. 
 
@@ -89,22 +88,19 @@ sudo ln -s  /usr/local/lib/python3.8/dist-packages/numpy/core/include/numpy /usr
 ## Citing
 If you have used this codebase in a scientific publication and wish to cite it, please use these references:
 
-<a id="3">[3]</a> 
-BATISTA, N. F.; NUNES, B. L.; NALDI, M. C. Efficient multiple density-based models over large datasets with data stream applications. Applied Soft Computing, v. 186, p. 114019, 2026. ISSN 1568-4946. Disponível em: <https:
-//www.sciencedirect.com/science/article/pii/S1568494625013328>.
+    BATISTA, N. F.; NUNES, B. L.; NALDI, M. C. Efficient multiple density-based models over large datasets with data stream applications. Applied Soft Computing, v. 186, p. 114019, 2026. ISSN 1568-4946. Disponível em: <https://www.sciencedirect.com/science/article/pii/S1568494625013328>.
 
-```
-@article{BATISTA2026,
-    title    = {Efficient multiple density-based models over large datasets with data stream applications},
-    journal  = {Applied Soft Computing},
-    volume   = {186},
-    pages    = {114019},
-    year     = {2026},
-    issn     = {1568-4946},
-    doi      = {https://doi.org/10.1016/j.asoc.2025.114019},
-    url      = {https://www.sciencedirect.com/science/article/pii/S1568494625013328},
-    author   = {Natanael F.D. Batista and Bruno L. Nunes and Murilo C. Naldi},
-    keywords = {Density-based data models, Unsupervised learning, Clustering, Data summarization, Data stream, Big data},
-    abstract = {Density-based hierarchical clustering offers comprehensive insight into the clusters and outlier structures within datasets through density functions. These algorithms construct a hierarchical graph representation, where edges are weighted by the minimum density required for connected data points to form clusters; this density threshold depends on the minimum number of objects within a neighborhood, denoted mpts, which acts as a smoothing parameter for the density estimate. CORE-SG, a spanning graph for the fast computation of HDBSCAN* results, allows efficient and seamless extraction of multiple hierarchical solutions with varying densities and across an arbitrary range of density smoothing levels, surpassing its predecessors in computational performance. However, much like its predecessors, CORE-SG requires neighborhood estimation based on pairwise similarity calculations that are constrained by a quadratic asymptotic complexity relative to dataset size, which can be impractical for scenarios involving large volumes of data. This paper proposes a streamlined version of CORE-SG, designed to achieve computational efficiency through data abstraction, and investigates the impact of data summarization on the quality of unsupervised hierarchical models across multiple density levels. Our goal is to improve the scalability of CORE-SG while preserving its core properties. We evaluated our approach on clustering and outlier detection tasks, comparing it to the original version. Furthermore, we adapted and evaluated its effectiveness in a data stream scenario, where data arrives continuously and indefinitely, requiring ongoing model updates. Our algorithm was benchmarked against the latest HDBSCAN*-based algorithm for data streams, demonstrating superior performance and improved clustering quality.}
-}
-```
+.. code:: bibtex
+    @article{BATISTA2026,
+        title    = {Efficient multiple density-based models over large datasets with data stream applications},
+        journal  = {Applied Soft Computing},
+        volume   = {186},
+        pages    = {114019},
+        year     = {2026},
+        issn     = {1568-4946},
+        doi      = {https://doi.org/10.1016/j.asoc.2025.114019},
+        url      = {https://www.sciencedirect.com/science/article/pii/S1568494625013328},
+        author   = {Natanael F.D. Batista and Bruno L. Nunes and Murilo C. Naldi},
+        keywords = {Density-based data models, Unsupervised learning, Clustering, Data summarization, Data stream, Big data},
+        abstract = {Density-based hierarchical clustering offers comprehensive insight into the clusters and outlier structures within datasets through density functions. These algorithms construct a hierarchical graph representation, where edges are weighted by the minimum density required for connected data points to form clusters; this density threshold depends on the minimum number of objects within a neighborhood, denoted mpts, which acts as a smoothing parameter for the density estimate. CORE-SG, a spanning graph for the fast computation of HDBSCAN* results, allows efficient and seamless extraction of multiple hierarchical solutions with varying densities and across an arbitrary range of density smoothing levels, surpassing its predecessors in computational performance. However, much like its predecessors, CORE-SG requires neighborhood estimation based on pairwise similarity calculations that are constrained by a quadratic asymptotic complexity relative to dataset size, which can be impractical for scenarios involving large volumes of data. This paper proposes a streamlined version of CORE-SG, designed to achieve computational efficiency through data abstraction, and investigates the impact of data summarization on the quality of unsupervised hierarchical models across multiple density levels. Our goal is to improve the scalability of CORE-SG while preserving its core properties. We evaluated our approach on clustering and outlier detection tasks, comparing it to the original version. Furthermore, we adapted and evaluated its effectiveness in a data stream scenario, where data arrives continuously and indefinitely, requiring ongoing model updates. Our algorithm was benchmarked against the latest HDBSCAN*-based algorithm for data streams, demonstrating superior performance and improved clustering quality.}
+    }
